@@ -69,6 +69,7 @@
     <Compile Include="Assets\MarchingCubes.cs" />
     <Compile Include="Assets\Tables.cs" />
     <Compile Include="Assets\Triangle.cs" />
+    <None Include="Assets\Test.shader" />
     <Reference Include="UnityEngine">
       <HintPath>C:/Program Files/Unity/2019.4.14f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>
