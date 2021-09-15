@@ -4,16 +4,17 @@ using UnityEngine;
 
 public class MarchingCubes : MonoBehaviour
 {
-    private Grid grid;
+    public Grid grid;
     private Tables tables;
     public double isolevel = 6.5;
     private double old_isolevel = -50;
     private Coord[] vertices;
     private Triangle[] triangles;
     public Material mat;
+    public bool updateMesh = false;
 
     int ntriang = 0;
-    int x = 10, y = 10, z = 10;
+    int x = 100, y = 10, z = 100;
 
     // Start is called before the first frame update
     void Start()
@@ -22,16 +23,16 @@ public class MarchingCubes : MonoBehaviour
         grid = new Grid(x, y, z);
         gameObject.AddComponent<MeshFilter>();
         gameObject.AddComponent<MeshRenderer>();
+        gameObject.AddComponent<MeshCollider>();
         gameObject.GetComponent<MeshRenderer>().material = mat;
-
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(isolevel != old_isolevel)
+        if(isolevel != old_isolevel || updateMesh)
         {
-            triangles = new Triangle[5000];
+            triangles = new Triangle[50* x * z * y];
             ntriang = 0;
             old_isolevel = isolevel;
             for (int i = 0; i < x; i++)
@@ -86,9 +87,6 @@ public class MarchingCubes : MonoBehaviour
             triangles[ntriang++] = new Triangle(vertices[tables.getFromTriTable(cubeindex, i)], vertices[tables.getFromTriTable(cubeindex, i + 1)], vertices[tables.getFromTriTable(cubeindex, i + 2)]);
         }
 
-        
-        Debug.Log("ntriangs " + ntriang);
-
         return (ntriang);
 
     }
@@ -115,6 +113,7 @@ public class MarchingCubes : MonoBehaviour
     void renderTriangles(int ntriangles)
     {
         Mesh mesh = gameObject.GetComponent<MeshFilter>().mesh;
+        mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
         mesh.Clear();
         mesh.vertices = new Vector3[ntriangles * 3];
         mesh.uv = new Vector2[ntriangles * 3];
@@ -123,7 +122,6 @@ public class MarchingCubes : MonoBehaviour
         Vector3[] mesh_vertices = mesh.vertices;
         Vector2[] mesh_uv = mesh.uv;
         int[] mesh_triangles = mesh.triangles;
-
         for (int i = 0; i < ntriangles; i++)
         {
             //Debug.Log("i " + i * 3 + " triangle " + (float)triangles[i].coords[0].x);
@@ -135,12 +133,18 @@ public class MarchingCubes : MonoBehaviour
             mesh_uv[i * 3 + 1] = new Vector2(0, 1);
             mesh_uv[i * 3 + 2] = new Vector2(1, 1);
 
-            mesh_triangles[i * 3] = i * 3;
+            mesh_triangles[i * 3] = i * 3 + 2;
             mesh_triangles[i * 3 + 1] = i * 3 + 1;
-            mesh_triangles[i * 3 + 2] = i * 3 + 2;
+            mesh_triangles[i * 3 + 2] = i * 3;
         }
+
         mesh.vertices = mesh_vertices;
         mesh.uv = mesh_uv;
         mesh.triangles = mesh_triangles;
+
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+
+        GetComponent<MeshCollider>().sharedMesh = mesh;
     }
 }
