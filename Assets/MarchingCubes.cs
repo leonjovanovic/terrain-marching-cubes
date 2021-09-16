@@ -1,26 +1,30 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class MarchingCubes : MonoBehaviour
 {
     public Grid grid;
+    public float gridCellSize = 1.0f;
+    private float oldGridCellSize = -1f;
     private Tables tables;
-    public double isolevel = 6.5;
-    private double old_isolevel = -50;
+    public float isolevelBaseline = 8.5f;
+    private float isolevel = 8.5f;
+    private float oldIsolevel = -50;
     private Coord[] vertices;
-    private Triangle[] triangles;
+    private List<Triangle> triangles;
     public Material mat;
-    public bool updateMesh = false;
+    private bool updateMesh = false;
 
-    int ntriang = 0;
-    int x = 100, y = 10, z = 100;
+    private int x = 100, y = 10, z = 100;
+    //private int oldX = -1, oldY = -1, oldZ = -1;
 
     // Start is called before the first frame update
     void Start()
     {
         tables = new Tables();
-        grid = new Grid(x, y, z);
+        grid = new Grid(x, y, z, gridCellSize);
         gameObject.AddComponent<MeshFilter>();
         gameObject.AddComponent<MeshRenderer>();
         gameObject.AddComponent<MeshCollider>();
@@ -30,24 +34,27 @@ public class MarchingCubes : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(isolevel != old_isolevel || updateMesh)
+        if(isolevel != oldIsolevel || gridCellSize != oldGridCellSize || updateMesh)
         {
-            triangles = new Triangle[50* x * z * y];
-            ntriang = 0;
-            old_isolevel = isolevel;
+            if (gridCellSize != oldGridCellSize)
+            {
+                isolevel = isolevelBaseline / gridCellSize;
+                x = (int)(20 / gridCellSize); y = (int)(5 / gridCellSize); z = (int)(20 / gridCellSize);
+                grid.createGrid(x, y, z, gridCellSize);
+            }
+            updateMesh = false;
+            oldIsolevel = isolevel; oldGridCellSize = gridCellSize;//oldX = x; oldY = y; oldZ = z; 
+            triangles = new List<Triangle>();
             for (int i = 0; i < x; i++)
                 for (int j = 0; j < y; j++)
                     for (int k = 0; k < z; k++)//For every cube
-                    {
                         createTriangles(i, j, k);
-                    }
-
-            Debug.Log("Vratio je ukupno " + ntriang + " trouglova!");
-            renderTriangles(ntriang);
+            //Debug.Log("Vratio je ukupno " + triangles.Count + " trouglova!");
+            renderTriangles();
         }
     }
 
-    int createTriangles(int x1, int y1, int z1)
+    void createTriangles(int x1, int y1, int z1)
     {
         int cubeindex;
         cubeindex = 0;
@@ -60,11 +67,10 @@ public class MarchingCubes : MonoBehaviour
         if (grid.coords_vals[x1 + 1, y1 + 1, z1 + 1] < isolevel) cubeindex |= 64;
         if (grid.coords_vals[x1 + 1, y1 + 1, z1] < isolevel) cubeindex |= 128;
 
-        //Debug.Log("Cubeindex: " + cubeindex);
         int edges = tables.getFromEdgeTable(cubeindex);
         // Cube is entirely in/out of the surface
         if (edges == 0)
-            return 0;
+            return;
         vertices = new Coord[12];
         // Find the vertices where the surface intersects the cube
         if ((edges & 1) == 1) vertices[0] = VertexInterp(x1, y1, z1, x1, y1, z1 + 1);
@@ -80,54 +86,50 @@ public class MarchingCubes : MonoBehaviour
         if ((edges & 1024) == 1024) vertices[10] = VertexInterp(x1 + 1, y1, z1 + 1, x1 + 1, y1 + 1, z1 + 1);
         if ((edges & 2048) == 2048) vertices[11] = VertexInterp(x1 + 1, y1, z1, x1 + 1, y1 + 1, z1);
 
-
         /* Create the triangle */
         for (int i = 0; tables.getFromTriTable(cubeindex, i) != -1; i += 3)
-        {
-            triangles[ntriang++] = new Triangle(vertices[tables.getFromTriTable(cubeindex, i)], vertices[tables.getFromTriTable(cubeindex, i + 1)], vertices[tables.getFromTriTable(cubeindex, i + 2)]);
-        }
-
-        return (ntriang);
-
+            triangles.Add(new Triangle(vertices[tables.getFromTriTable(cubeindex, i)], vertices[tables.getFromTriTable(cubeindex, i + 1)], vertices[tables.getFromTriTable(cubeindex, i + 2)]));
     }
 
     Coord VertexInterp(int x1, int y1, int z1, int x2, int y2, int z2)
     {
-        double valp1 = grid.coords_vals[x1, y1, z1];
-        double valp2 = grid.coords_vals[x2, y2, z2];
+        float valp1 = grid.coords_vals[x1, y1, z1];
+        float valp2 = grid.coords_vals[x2, y2, z2];
+
+        float x1_g = gridCellSize * x1, y1_g = gridCellSize * y1, z1_g = gridCellSize * z1;
+        float x2_g = gridCellSize * x2, y2_g = gridCellSize * y2, z2_g = gridCellSize * z2;
 
         if (Mathf.Abs((float)(isolevel - valp1)) < 0.00001)
-            return new Coord(x1, y1, z1);
+            return new Coord(x1_g, y1_g, z1_g);
         if (Mathf.Abs((float)(isolevel - valp2)) < 0.00001)
-            return new Coord(x2, y2, z2);
+            return new Coord(x2_g, y2_g, z2_g);
         if (Mathf.Abs((float)(valp1 - valp2)) < 0.00001)
-            return new Coord(x1, y1, z1);
+            return new Coord(x1_g, y1_g, z1_g);
 
-        double mu = (isolevel - valp1) / (valp2 - valp1);
-        double x = x1 + mu * (x2 - x1);
-        double y = y1 + mu * (y2 - y1);
-        double z = z1 + mu * (z2 - z1);
+        float mu = (isolevel - valp1) / (valp2 - valp1);
+        float x = x1_g + mu * (x2_g - x1_g);
+        float y = y1_g + mu * (y2_g - y1_g);
+        float z = z1_g + mu * (z2_g - z1_g);
         return new Coord(x, y, z);
     }
 
-    void renderTriangles(int ntriangles)
+    void renderTriangles()
     {
         Mesh mesh = gameObject.GetComponent<MeshFilter>().mesh;
         mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
         mesh.Clear();
-        mesh.vertices = new Vector3[ntriangles * 3];
-        mesh.uv = new Vector2[ntriangles * 3];
-        mesh.triangles = new int[ntriangles * 3];
+        mesh.vertices = new Vector3[triangles.Count * 3];
+        mesh.uv = new Vector2[triangles.Count * 3];
+        mesh.triangles = new int[triangles.Count * 3];
 
         Vector3[] mesh_vertices = mesh.vertices;
         Vector2[] mesh_uv = mesh.uv;
         int[] mesh_triangles = mesh.triangles;
-        for (int i = 0; i < ntriangles; i++)
+        for (int i = 0; i < triangles.Count; i++)
         {
-            //Debug.Log("i " + i * 3 + " triangle " + (float)triangles[i].coords[0].x);
-            mesh_vertices[i * 3].Set((float)triangles[i].coords[0].x, (float)triangles[i].coords[0].y, (float)triangles[i].coords[0].z);
-            mesh_vertices[i * 3 + 1].Set((float)triangles[i].coords[1].x, (float)triangles[i].coords[1].y, (float)triangles[i].coords[1].z);
-            mesh_vertices[i * 3 + 2].Set((float)triangles[i].coords[2].x, (float)triangles[i].coords[2].y, (float)triangles[i].coords[2].z);
+            mesh_vertices[i * 3].Set(triangles[i].coords[0].x, triangles[i].coords[0].y, triangles[i].coords[0].z);
+            mesh_vertices[i * 3 + 1].Set(triangles[i].coords[1].x, triangles[i].coords[1].y, triangles[i].coords[1].z);
+            mesh_vertices[i * 3 + 2].Set(triangles[i].coords[2].x, triangles[i].coords[2].y, triangles[i].coords[2].z);
 
             mesh_uv[i * 3] = new Vector2(0, 0);
             mesh_uv[i * 3 + 1] = new Vector2(0, 1);
@@ -147,4 +149,45 @@ public class MarchingCubes : MonoBehaviour
 
         GetComponent<MeshCollider>().sharedMesh = mesh;
     }
+
+    public int getX()
+    {
+        return x;
+    }
+    public int getY()
+    {
+        return y;
+    }
+    public int getZ()
+    {
+        return z;
+    }
+
+    public float getIsolevel()
+    {
+        return isolevel;
+    }
+
+    public void setUpdateMesh(bool val)
+    {
+        updateMesh = val;
+    }
+
+    public void OnSliderGridCellValueChanged(float value)
+    {
+        switch (value)
+        {
+            case 0: 
+                gridCellSize = 0.2f;
+                break;
+            case 1:
+                gridCellSize = 0.5f;
+                break;
+            case 2:
+                gridCellSize = 1.0f;
+                break;
+        }
+        GameObject.Find("GridCellSizeText").GetComponent<TextMeshProUGUI>().text = gridCellSize.ToString();
+    }
+    
 }

@@ -1,0 +1,16 @@
+-Alat  treba  da  ima  mogućnost  zadavanja:
+	nivoa  izdeljenosti  prostora  na  voksele  +
+	poluprečnika četke koja je sfernog oblika + 
+	mogućnost  poravnavanja  celokupnog  terena  na zadatu visinu
+	mogućnost da se generiše početni teren na slučajan način
+-Pritiskom na levo dugme miša  treba  da  se  generišu  novi  delovi  terena  u prostoru koji zahvata četka + 
+-pritiskom na desno dugme  treba  da  se  uklanjaju  delovi  zahvaćeni  četkom +
+
+-Teren  je  moguće:
+	uveličavati  ili  smanjivati (zoom in/out)
+	rotirati oko koordinatnog početka pomeranjem pritisnutnog miša (mouse drag) ili putem  strelica  na  tastaturi.  
+
+Tačke na terenu treba da  budu  obojene  u  zavisnosti  od  visine  tako  da  najniže  imaju  crvenu,  a  najviše  ljubičastu  boju 
+(iskoristiti   HSV   model   boja  [3]).  Teren  osvetliti  direkcionim  izvorom  svetla  Fongovim  modelom 
+senčenja uz ambijentalnu i difuznu komponentu. Boja direkcionog svetla takođe može da se menja iz 
+inspektora. 

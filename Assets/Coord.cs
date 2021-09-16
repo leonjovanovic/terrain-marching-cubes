@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 public class Coord
 {
-    public double x, y, z;
-    public Coord(double x1, double y1, double z1)
+    public float x, y, z;
+    public Coord(float x1, float y1, float z1)
     {
         x = x1;
         y = y1;
