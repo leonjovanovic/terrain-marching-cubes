@@ -10,6 +10,8 @@ public class Grid
 
     private bool generateTerrain = false;
 
+    private float c1, c2, c3, c4;
+
     public Grid(int x, int y, int z)
     {
     }
@@ -34,15 +36,23 @@ public class Grid
         density = y;
         if (generateTerrain)
         {
-            density += height * Mathf.PerlinNoise((float)x / width * 10.05f, (float)z / width * 10.05f) / 4;
-            density += height * Mathf.PerlinNoise((float)x / width * 5.30f, (float)z / width * 5.30f) / 2;
-            density += height * Mathf.PerlinNoise((float)x / width * 1f, (float)z / width * 1f);
-            density += height * Mathf.PerlinNoise((float)z / width * 2f, (float)x / width * 2f);
+            density += height * Mathf.PerlinNoise((float)x / width * c1, (float)z / width * c1) / 4; //10.05
+            density += height * Mathf.PerlinNoise((float)x / width * c2, (float)z / width * c2) / 2; //5.30
+            density += height * Mathf.PerlinNoise((float)x / width * c3, (float)z / width * c3) /2.5f; //1
+            density += height * Mathf.PerlinNoise((float)z / width * c4, (float)x / width * c4);//2
         }
         if (min > density)
             min = density;
         if (max < density)
             max = density;
         return density;
+    }
+
+    public void createCoefficients()
+    {
+        c1 = Random.Range(8, 12);
+        c2 = Random.Range(3.3f, 7.3f);
+        c3 = Random.Range(1f, 2f);
+        c4 = Random.Range(1f, 3f);
     }
 }

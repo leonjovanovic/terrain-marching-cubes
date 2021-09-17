@@ -183,8 +183,9 @@ public class MarchingCubes : MonoBehaviour
     public void setGenerateTerrain()
     {
         lastMode = true;
+        grid.createCoefficients();
         updateMesh = true;
-        isolevelBaseline = 8.75f;
+        isolevelBaseline = 8f;
     }
 
     public void setFlattenLevel(float val)

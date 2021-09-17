@@ -14,3 +14,8 @@ Tačke na terenu treba da  budu  obojene  u  zavisnosti  od  visine  tako  da  n
 (iskoristiti   HSV   model   boja  [3]).  Teren  osvetliti  direkcionim  izvorom  svetla  Fongovim  modelom 
 senčenja uz ambijentalnu i difuznu komponentu. Boja direkcionog svetla takođe može da se menja iz 
 inspektora. 
+
+Random.Range(8,12)
+Random.Range(3.3f, 7.3f)
+Random.Range(0f, 2f)
+Random.Range(1f, 3f)
