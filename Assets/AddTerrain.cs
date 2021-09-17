@@ -10,6 +10,7 @@ public class AddTerrain : MonoBehaviour
     private float oldRadius = -1f;
     private RaycastHit hit;
     public GameObject terrainBrush;
+    private CameraMovement cam;
     private float[,,] coords_vals;
     private float isosurface;
     private float x, y, z;
@@ -17,16 +18,18 @@ public class AddTerrain : MonoBehaviour
     void Start()
     {
         terrainBrush = GameObject.Find("TerrainBrush");
+        cam = Camera.main.GetComponent<CameraMovement>();
     }
 
     // Update is called once per frame
-    void FixedUpdate()
+    void Update()
     {
+        if (cam.drag) return;
         Ray look = Camera.main.ScreenPointToRay(Input.mousePosition);
-        terrainBrush.transform.position = hit.point;
         if (IsPointerOverUIObject()) return;
         if (Physics.Raycast(look, out hit))
         {
+            terrainBrush.transform.position = hit.point;
             if (Input.GetMouseButton(0))
             {
                 findAllVertices(hit.point, true);
@@ -36,7 +39,11 @@ public class AddTerrain : MonoBehaviour
                 findAllVertices(hit.point, false);
             }
         }
-        if(radius != oldRadius)
+        else
+        {
+            terrainBrush.transform.position = new Vector3(0,20,0);
+        }
+        if (radius != oldRadius)
         {
             oldRadius = radius;
             updateBrushSize();
@@ -55,26 +62,26 @@ public class AddTerrain : MonoBehaviour
         y = GetComponent<MarchingCubes>().getY();
         z = GetComponent<MarchingCubes>().getZ();
         
-        coord = coord / GetComponent<MarchingCubes>().gridCellSize;
-        float radiusScaled = radius / GetComponent<MarchingCubes>().gridCellSize;
+        coord = coord / GetComponent<MarchingCubes>().getGridCellSize();
+        float radiusScaled = radius / GetComponent<MarchingCubes>().getGridCellSize();
 
         float r = Mathf.Pow(radiusScaled, 2);
-        for (int i = (int)(Mathf.Max(coord.x - radiusScaled, 0)); i < Mathf.Min(coord.x + radiusScaled + 1, x); i++)//x osa
+        for (int i = (int)(Mathf.Max(coord.x - radiusScaled, 0)); i < Mathf.Min(coord.x + radiusScaled + 1, x + 1); i++)//x osa
         {
             valX = Mathf.Pow(coord.x - i, 2);
-            for (int j = (int)(Mathf.Max(coord.y - radiusScaled, 0)); j < Mathf.Min(coord.y + radiusScaled + 1, y); j++)//y osa
+            for (int j = (int)(Mathf.Max(coord.y - radiusScaled, 0)); j < Mathf.Min(coord.y + radiusScaled + 1, y + 1); j++)//y osa
             {
                 valY = Mathf.Pow(coord.y - j, 2);
-                for (int k = (int)(Mathf.Max(coord.z - radiusScaled, 0)); k < Mathf.Min(coord.z + radiusScaled + 1, z); k++)
+                for (int k = (int)(Mathf.Max(coord.z - radiusScaled, 0)); k < Mathf.Min(coord.z + radiusScaled + 1, z + 1); k++)
                 {
                     valZ = Mathf.Pow(coord.z - k, 2);
                     if ((valX + valY + valZ) <= r)
                     {
-                        if(coords_vals[i,j,k] > isosurface && add)
+                        if (add && j!= y)
                         {
                             coords_vals[i, j, k] -= 0.5f;//isosurface - 0.01f;
                         }
-                        if (coords_vals[i, j, k] < isosurface && !add && j!= 0)
+                        if (!add && j!= 0)
                         {
                             coords_vals[i, j, k] += 0.5f;// = isosurface + 0.01f;
                         }
@@ -82,7 +89,7 @@ public class AddTerrain : MonoBehaviour
                 }
             }
         }
-        GetComponent<MarchingCubes>().setUpdateMesh(true);
+        GetComponent<MarchingCubes>().marchCubes();
     }
 
     void updateBrushSize()

@@ -1,8 +1,8 @@
 -Alat  treba  da  ima  mogućnost  zadavanja:
 	nivoa  izdeljenosti  prostora  na  voksele  +
 	poluprečnika četke koja je sfernog oblika + 
-	mogućnost  poravnavanja  celokupnog  terena  na zadatu visinu
-	mogućnost da se generiše početni teren na slučajan način
+	mogućnost  poravnavanja  celokupnog  terena  na zadatu visinu +
+	mogućnost da se generiše početni teren na slučajan način +
 -Pritiskom na levo dugme miša  treba  da  se  generišu  novi  delovi  terena  u prostoru koji zahvata četka + 
 -pritiskom na desno dugme  treba  da  se  uklanjaju  delovi  zahvaćeni  četkom +
 

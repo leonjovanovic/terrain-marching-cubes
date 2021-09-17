@@ -65,6 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\AddTerrain.cs" />
+    <Compile Include="Assets\CameraMovement.cs" />
     <Compile Include="Assets\Coord.cs" />
     <Compile Include="Assets\Grid.cs" />
     <Compile Include="Assets\MarchingCubes.cs" />

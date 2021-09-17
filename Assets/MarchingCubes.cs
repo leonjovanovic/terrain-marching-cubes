@@ -6,16 +6,19 @@ using TMPro;
 public class MarchingCubes : MonoBehaviour
 {
     public Grid grid;
-    public float gridCellSize = 1.0f;
+    private float gridCellSize = 0.2f;
     private float oldGridCellSize = -1f;
     private Tables tables;
-    public float isolevelBaseline = 8.5f;
+    private float isolevelBaseline = 0.01f;
     private float isolevel = 8.5f;
     private float oldIsolevel = -50;
     private Coord[] vertices;
     private List<Triangle> triangles;
     public Material mat;
-    private bool updateMesh = false;
+    private bool generateTerrain = false;
+    private int flattenLevel = 0;
+    private bool lastMode = false; //if its random terrain or flat terrain last rendered
+    private bool updateMesh = false; //if its random terrain or flat terrain last rendered
 
     private int x = 100, y = 10, z = 100;
     //private int oldX = -1, oldY = -1, oldZ = -1;
@@ -24,7 +27,7 @@ public class MarchingCubes : MonoBehaviour
     void Start()
     {
         tables = new Tables();
-        grid = new Grid(x, y, z, gridCellSize);
+        grid = new Grid(x, y, z);
         gameObject.AddComponent<MeshFilter>();
         gameObject.AddComponent<MeshRenderer>();
         gameObject.AddComponent<MeshCollider>();
@@ -34,24 +37,29 @@ public class MarchingCubes : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(isolevel != oldIsolevel || gridCellSize != oldGridCellSize || updateMesh)
+        if(isolevelBaseline != oldIsolevel || gridCellSize != oldGridCellSize || updateMesh)
         {
-            if (gridCellSize != oldGridCellSize)
+            if (gridCellSize != oldGridCellSize || updateMesh)
             {
-                isolevel = isolevelBaseline / gridCellSize;
-                x = (int)(20 / gridCellSize); y = (int)(5 / gridCellSize); z = (int)(20 / gridCellSize);
-                grid.createGrid(x, y, z, gridCellSize);
+                x = Mathf.RoundToInt(20 / gridCellSize); y = Mathf.RoundToInt(5 / gridCellSize); z = Mathf.RoundToInt(20 / gridCellSize);
+                grid.createGrid(x, y, z, lastMode);
+                updateMesh = false;
             }
-            updateMesh = false;
-            oldIsolevel = isolevel; oldGridCellSize = gridCellSize;//oldX = x; oldY = y; oldZ = z; 
-            triangles = new List<Triangle>();
-            for (int i = 0; i < x; i++)
-                for (int j = 0; j < y; j++)
-                    for (int k = 0; k < z; k++)//For every cube
-                        createTriangles(i, j, k);
-            //Debug.Log("Vratio je ukupno " + triangles.Count + " trouglova!");
-            renderTriangles();
+            isolevel = isolevelBaseline / gridCellSize;
+            oldIsolevel = isolevelBaseline; oldGridCellSize = gridCellSize;
+
+            marchCubes();
         }
+    }
+
+    public void marchCubes()
+    {
+        triangles = new List<Triangle>();
+        for (int i = 0; i < x; i++)
+            for (int j = 0; j < y; j++)
+                for (int k = 0; k < z; k++)
+                    createTriangles(i, j, k);
+        renderTriangles();
     }
 
     void createTriangles(int x1, int y1, int z1)
@@ -168,9 +176,22 @@ public class MarchingCubes : MonoBehaviour
         return isolevel;
     }
 
-    public void setUpdateMesh(bool val)
+    public float getGridCellSize()
     {
-        updateMesh = val;
+        return gridCellSize;
+    }
+    public void setGenerateTerrain()
+    {
+        lastMode = true;
+        updateMesh = true;
+        isolevelBaseline = 8.75f;
+    }
+
+    public void setFlattenLevel(float val)
+    {
+        lastMode = false;
+        isolevelBaseline = val;
+        updateMesh = true;
     }
 
     public void OnSliderGridCellValueChanged(float value)
